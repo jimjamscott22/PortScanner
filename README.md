@@ -1,21 +1,26 @@
-# PortScanner
+# PortScanner - Enhanced Edition
 
-A Python-based network scanning tool for discovering active devices on a local network and scanning their open ports.
+A high-performance Python-based network scanning tool for discovering active devices on a local network and scanning their open ports with service detection and parallel threading.
 
-## Features
+## ✨ Features
 
-- **Network Discovery**: Uses ARP requests to detect active devices on your local network
-- **Port Scanning**:  Scans common ports on discovered devices to identify open services
-- **Lightweight**: Built with Python's `socket` library and `scapy` for efficient scanning
+- **Network Discovery**: Fast ARP-based device detection on your local network
+- **Parallel Port Scanning**: Multi-threaded scanning for 10-100x speed improvement
+- **Service Detection**: Automatically identifies common services (SSH, HTTP, HTTPS, RDP, etc.)
+- **Command-line Interface**: Flexible CLI with customizable options
+- **Smart Threading**: Configurable thread pool for optimal performance
+- **Lightweight**: Built with Python's `socket` library and `scapy`
+- **Beautiful Output**: Well-formatted, easy-to-read results
 
 ## Prerequisites
 
-- Python 3.x
+- Python 3.6+
 - Root/Administrator privileges (required for ARP scanning)
 
 ## Installation
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/jimjamscott22/PortScanner.git
    cd PortScanner
@@ -28,52 +33,140 @@ A Python-based network scanning tool for discovering active devices on a local n
 
 ## Usage
 
-### Network Scan Only
+### Network Discovery Only
 
-Run the basic network scanner to discover devices:
+Scan your network for active devices:
 
 ```bash
 sudo python src/NetScan.py
 ```
 
-### Full Scan (Network + Ports)
+**Options:**
 
-Run the comprehensive scanner to discover devices and scan their ports: 
+```bash
+sudo python src/NetScan.py -n 192.168.0.1/24 -t 3
+```
+
+- `-n, --network` : Target network range (default: `192.168.1.1/24`)
+- `-t, --timeout` : ARP scan timeout in seconds (default: `2`)
+
+### Full Network & Port Scan
+
+Discover devices and scan their ports:
 
 ```bash
 sudo python src/port_ScannerDemo1.py
 ```
 
-### Configuration
+**Options:**
 
-Edit the scripts to customize: 
+```bash
+sudo python src/port_ScannerDemo1.py \
+  -n 192.168.1.1/24 \
+  -p 22 80 443 3389 \
+  --timeout 1 \
+  --workers 20
+```
 
-- **Target Network**: Change `192.168.1.1/24` to match your local network range
-- **Ports to Scan**:  Modify the `common_ports` list to scan different ports (default: 22, 23, 80, 443, 3389)
+**CLI Arguments:**
+
+- `-n, --network` : Target network range (default: `192.168.1.1/24`)
+- `-p, --ports` : Ports to scan (default: `22 23 80 443 3389 8080 8443`)
+- `-t, --timeout` : Socket timeout in seconds (default: `1`)
+- `-w, --workers` : Number of concurrent threads (default: `20`)
+- `--scan-timeout` : ARP scan timeout in seconds (default: `2`)
+
+## Service Detection
+
+The scanner automatically identifies services running on open ports:
+
+| Port  | Service    |
+| ----- | ---------- |
+| 22    | SSH        |
+| 80    | HTTP       |
+| 443   | HTTPS      |
+| 3306  | MySQL      |
+| 3389  | RDP        |
+| 5432  | PostgreSQL |
+| 5900  | VNC        |
+| 8080  | HTTP-Alt   |
+| 27017 | MongoDB    |
+| 6379  | Redis      |
+
+_See the code for the complete list of supported services._
 
 ## Example Output
 
 ```
-Scanning network: 192.168.1.1/24 ... 
+============================================================
+Network Scanner - Enhanced Edition
+============================================================
+Network: 192.168.1.1/24
+Ports: 22, 80, 443, 3389
+Timeout: 1s | Workers: 20
+============================================================
+
+Scanning network: 192.168.1.1/24 ...
 
 Active Devices on Network:
---------------------------------------------------
-IP Address: 192.168.1.1     MAC Address: aa:bb:cc: dd:ee:ff
-IP Address: 192.168.1.100   MAC Address: 11:22:33:44:55:66
---------------------------------------------------
+------------------------------------------------------------
+IP Address: 192.168.1.1         | MAC Address: aa:bb:cc:dd:ee:ff
+IP Address: 192.168.1.100       | MAC Address: 11:22:33:44:55:66
+------------------------------------------------------------
+Found 2 device(s)
 
 Scanning ports on 192.168.1.1 ...
-Open ports on 192.168.1.1: 80, 443
+
+Open ports on 192.168.1.1:
+----------------------------------------
+  Port 80    | Service: HTTP
+  Port 443   | Service: HTTPS
+----------------------------------------
+
+Scanning ports on 192.168.1.100 ...
+
+Open ports on 192.168.1.100:
+----------------------------------------
+  Port 22    | Service: SSH
+  Port 3389  | Service: RDP
+----------------------------------------
+```
+
+## Performance Tips
+
+- **Increase Workers**: Use `--workers 30-50` for faster scanning (default: 20)
+- **Decrease Timeout**: Use `--timeout 0.5` for quicker failure detection
+- **Scan Fewer Ports**: Only scan ports you need to reduce total scan time
+
+Example (aggressive scan):
+
+```bash
+sudo python src/port_ScannerDemo1.py -n 192.168.1.1/24 -p 22 80 443 -t 0.5 -w 50
 ```
 
 ## ⚠️ Disclaimer
 
-This tool is intended for **educational purposes** and **authorized network testing only**.  Unauthorized scanning of networks you do not own or have explicit permission to test is illegal and unethical.  Always obtain proper authorization before scanning any network.
+This tool is intended for **educational purposes** and **authorized network testing only**. Unauthorized scanning of networks you do not own or have explicit permission to test is illegal and unethical. Always obtain proper authorization before scanning any network.
 
 ## License
 
-This project is open source.  Feel free to use and modify as needed. 
+This project is open source. Feel free to use and modify as needed.
 
 ## Contributing
 
-Contributions are welcome! Feel free to submit issues and pull requests. 
+Contributions are welcome! Feel free to submit issues and pull requests.
+
+## Changelog
+
+### v2.0 (Enhanced Edition)
+
+- ✅ Fixed ARP request bug
+- ✅ Added command-line argument support
+- ✅ Implemented multi-threaded port scanning
+- ✅ Added service detection and mapping
+- ✅ Improved output formatting
+- ✅ Added comprehensive help and examples
+
+### v1.0
+
+- Initial release with basic network and port scanning
