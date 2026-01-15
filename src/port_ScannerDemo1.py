@@ -1,5 +1,7 @@
 import socket
 import argparse
+import json
+import csv
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from scapy.all import ARP, Ether, srp
 
@@ -33,7 +35,17 @@ SERVICE_MAP = {
 }
 
 
-def scan_network(ip_range, timeout=2):
+def resolve_hostname(ip):
+    """Attempts reverse DNS lookup for the given IP address."""
+
+    try:
+        hostname, _, _ = socket.gethostbyaddr(ip)
+        return hostname
+    except Exception:
+        return None
+
+
+def scan_network(ip_range, timeout=2, resolve_hostnames=False):
     """Scans a network for active devices using ARP requests."""
 
     print(f"Scanning network: {ip_range} ...")
@@ -53,13 +65,19 @@ def scan_network(ip_range, timeout=2):
     # Process responses
     devices = []
     for sent, received in answered:
-        devices.append({"IP": received.psrc, "MAC": received.hwsrc})
+        hostname = resolve_hostname(received.psrc) if resolve_hostnames else None
+        devices.append(
+            {"IP": received.psrc, "MAC": received.hwsrc, "Hostname": hostname}
+        )
 
     # Display results
     print("\nActive Devices on Network:")
     print("-" * 60)
     for device in devices:
-        print(f"IP Address: {device['IP']:<15} | MAC Address: {device['MAC']}")
+        hostname = device.get("Hostname") or "-"
+        print(
+            f"IP Address: {device['IP']:<15} | MAC Address: {device['MAC']} | Hostname: {hostname}"
+        )
     print("-" * 60)
     print(f"Found {len(devices)} device(s)\n")
 
@@ -116,6 +134,81 @@ def scan_ports(ip, ports, timeout=1, max_workers=20):
 
     print()
 
+    return open_ports
+
+
+def parse_ports(port_args):
+    """Parse ports from a list of strings supporting ranges and CSV."""
+
+    ports = set()
+
+    for arg in port_args:
+        for part in arg.split(","):
+            part = part.strip()
+            if not part:
+                continue
+
+            if "-" in part:
+                start_str, end_str = part.split("-", 1)
+                if not start_str.isdigit() or not end_str.isdigit():
+                    raise ValueError(f"Invalid port range: {part}")
+
+                start = int(start_str)
+                end = int(end_str)
+                if start < 1 or end > 65535 or start > end:
+                    raise ValueError(f"Invalid port range: {part}")
+
+                ports.update(range(start, end + 1))
+            else:
+                if not part.isdigit():
+                    raise ValueError(f"Invalid port: {part}")
+
+                port = int(part)
+                if port < 1 or port > 65535:
+                    raise ValueError(f"Invalid port: {part}")
+
+                ports.add(port)
+
+    return sorted(ports)
+
+
+def export_results(results, output_format, output_path):
+    """Export scan results to JSON or CSV."""
+
+    if output_format == "json":
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(results, f, indent=2)
+        return
+
+    if output_format == "csv":
+        with open(output_path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(["ip", "mac", "hostname", "port", "service"])
+
+            for device in results:
+                ip = device.get("ip")
+                mac = device.get("mac")
+                hostname = device.get("hostname") or ""
+                open_ports = device.get("open_ports", [])
+
+                if not open_ports:
+                    writer.writerow([ip, mac, hostname, "", ""])
+                    continue
+
+                for port_info in open_ports:
+                    writer.writerow(
+                        [
+                            ip,
+                            mac,
+                            hostname,
+                            port_info.get("port"),
+                            port_info.get("service"),
+                        ]
+                    )
+        return
+
+    raise ValueError(f"Unsupported output format: {output_format}")
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -140,9 +233,8 @@ Examples:
         "-p",
         "--ports",
         nargs="+",
-        type=int,
-        default=[22, 23, 80, 443, 3389, 8080, 8443],
-        help="Ports to scan (default: 22 23 80 443 3389 8080 8443)",
+        default=["22", "23", "80", "443", "3389", "8080", "8443"],
+        help="Ports to scan; supports ranges and CSV (e.g., 22 80 443 1-1024 8080,8443)",
     )
 
     parser.add_argument(
@@ -168,29 +260,74 @@ Examples:
         help="ARP scan timeout in seconds (default: 2)",
     )
 
+    parser.add_argument(
+        "--resolve-hostnames",
+        action="store_true",
+        help="Resolve hostnames via reverse DNS",
+    )
+
+    parser.add_argument(
+        "--output",
+        help="Export results to a file (JSON or CSV)",
+    )
+
+    parser.add_argument(
+        "--format",
+        choices=["json", "csv"],
+        default="json",
+        help="Output format when using --output (default: json)",
+    )
+
     args = parser.parse_args()
 
     print("=" * 60)
     print("Network Scanner - Enhanced Edition")
     print("=" * 60)
+    try:
+        ports = parse_ports(args.ports)
+    except ValueError as e:
+        print(f"❌ Error: {e}")
+        return
+
     print(f"Network: {args.network}")
-    print(f"Ports: {', '.join(map(str, args.ports))}")
+    print(f"Ports: {', '.join(map(str, ports))}")
     print(f"Timeout: {args.timeout}s | Workers: {args.workers}")
     print("=" * 60 + "\n")
 
     try:
         # Scan network
-        devices = scan_network(args.network, timeout=args.scan_timeout)
+        devices = scan_network(
+            args.network,
+            timeout=args.scan_timeout,
+            resolve_hostnames=args.resolve_hostnames,
+        )
 
         if not devices:
             print("No devices found on the network.")
             return
 
         # Scan ports on each device
+        results = []
         for device in devices:
-            scan_ports(
-                device["IP"], args.ports, timeout=args.timeout, max_workers=args.workers
+            open_ports = scan_ports(
+                device["IP"], ports, timeout=args.timeout, max_workers=args.workers
             )
+
+            results.append(
+                {
+                    "ip": device["IP"],
+                    "mac": device["MAC"],
+                    "hostname": device.get("Hostname"),
+                    "open_ports": [
+                        {"port": port, "service": service}
+                        for port, service in open_ports
+                    ],
+                }
+            )
+
+        if args.output:
+            export_results(results, args.format, args.output)
+            print(f"Results exported to {args.output}")
 
     except PermissionError:
         print("❌ Error: This script requires root/administrator privileges!")

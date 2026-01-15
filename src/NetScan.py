@@ -2,7 +2,20 @@ import argparse
 from scapy.all import ARP, Ether, srp
 
 
-def scan_network(ip_range, timeout=2):
+import socket
+
+
+def resolve_hostname(ip):
+    """Attempts reverse DNS lookup for the given IP address."""
+
+    try:
+        hostname, _, _ = socket.gethostbyaddr(ip)
+        return hostname
+    except Exception:
+        return None
+
+
+def scan_network(ip_range, timeout=2, resolve_hostnames=False):
     """Scans a network for active devices using ARP requests."""
 
     print(f"Scanning network: {ip_range} ...")
@@ -22,13 +35,19 @@ def scan_network(ip_range, timeout=2):
     # Process responses
     devices = []
     for sent, received in answered:
-        devices.append({"IP": received.psrc, "MAC": received.hwsrc})
+        hostname = resolve_hostname(received.psrc) if resolve_hostnames else None
+        devices.append(
+            {"IP": received.psrc, "MAC": received.hwsrc, "Hostname": hostname}
+        )
 
     # Display results
     print("\nActive Devices on Network:")
     print("-" * 60)
     for device in devices:
-        print(f"IP Address: {device['IP']:<15} | MAC Address: {device['MAC']}")
+        hostname = device.get("Hostname") or "-"
+        print(
+            f"IP Address: {device['IP']:<15} | MAC Address: {device['MAC']} | Hostname: {hostname}"
+        )
     print("-" * 60)
     print(f"Found {len(devices)} device(s)")
 
@@ -62,6 +81,12 @@ Examples:
         help="ARP scan timeout in seconds (default: 2)",
     )
 
+    parser.add_argument(
+        "--resolve-hostnames",
+        action="store_true",
+        help="Resolve hostnames via reverse DNS",
+    )
+
     args = parser.parse_args()
 
     print("=" * 60)
@@ -69,7 +94,9 @@ Examples:
     print("=" * 60)
 
     try:
-        scan_network(args.network, timeout=args.timeout)
+        scan_network(
+            args.network, timeout=args.timeout, resolve_hostnames=args.resolve_hostnames
+        )
     except PermissionError:
         print("❌ Error: This script requires root/administrator privileges!")
         print("   On Linux/Mac: sudo python NetScan.py")

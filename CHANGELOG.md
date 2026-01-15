@@ -1,5 +1,13 @@
 # Changelog - Port Scanner
 
+## v2.1 - Export & Hostname Enhancements
+
+### ✅ Implemented Features
+
+- **Port Range Parsing**: Support for ranges (e.g., `1-1024`) and CSV values
+- **Hostname Resolution**: Optional reverse DNS lookups in both scanners
+- **JSON/CSV Export**: Save full scan results to a file
+
 ## v2.0 - Enhanced Edition (Current)
 
 ### ✅ Implemented Features
