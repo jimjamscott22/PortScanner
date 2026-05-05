@@ -60,9 +60,9 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python NetScan.py
-  python NetScan.py -n 192.168.1.1/24
-  python NetScan.py -n 192.168.0.1/24 -t 3
+  uv run netscan
+  uv run netscan -n 192.168.1.1/24
+  uv run netscan -n 192.168.0.1/24 -t 3
         """,
     )
 
@@ -99,7 +99,7 @@ Examples:
         )
     except PermissionError:
         print("❌ Error: This script requires root/administrator privileges!")
-        print("   On Linux/Mac: sudo python NetScan.py")
+        print("   On Linux/Mac: sudo uv run netscan")
         print("   On Windows: Run PowerShell as Administrator")
     except Exception as e:
         print(f"❌ Error: {e}")

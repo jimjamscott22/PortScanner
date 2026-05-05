@@ -1,0 +1,23 @@
+[project]
+name = "portscanner"
+version = "2.1.0"
+description = "A Python network scanner for discovering devices and scanning open ports."
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "scapy>=2.6.1",
+]
+
+[project.scripts]
+netscan = "NetScan:main"
+portscanner = "port_ScannerDemo1:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["NetScan", "port_ScannerDemo1"]
+
+[tool.setuptools.package-dir]
+"" = "src"

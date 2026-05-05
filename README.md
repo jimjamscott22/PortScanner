@@ -17,7 +17,8 @@ A high-performance Python-based network scanning tool for discovering active dev
 
 ## Prerequisites
 
-- Python 3.6+
+- Python 3.8+
+- [uv](https://docs.astral.sh/uv/)
 - Root/Administrator privileges (required for ARP scanning)
 
 ## Installation
@@ -31,7 +32,7 @@ A high-performance Python-based network scanning tool for discovering active dev
 
 2. Install required dependencies:
    ```bash
-   pip install scapy
+   uv sync
    ```
 
 ## Usage
@@ -41,13 +42,13 @@ A high-performance Python-based network scanning tool for discovering active dev
 Scan your network for active devices:
 
 ```bash
-sudo python src/NetScan.py
+sudo uv run netscan
 ```
 
 **Options:**
 
 ```bash
-sudo python src/NetScan.py -n 192.168.0.1/24 -t 3
+sudo uv run netscan -n 192.168.0.1/24 -t 3
 ```
 
 - `-n, --network` : Target network range (default: `192.168.1.1/24`)
@@ -59,13 +60,13 @@ sudo python src/NetScan.py -n 192.168.0.1/24 -t 3
 Discover devices and scan their ports:
 
 ```bash
-sudo python src/port_ScannerDemo1.py
+sudo uv run portscanner
 ```
 
 **Options:**
 
 ```bash
-sudo python src/port_ScannerDemo1.py \
+sudo uv run portscanner \
   -n 192.168.1.1/24 \
   -p 22 80 443 3389 1-1024 8080,8443 \
   --timeout 1 \
@@ -151,13 +152,13 @@ Open ports on 192.168.1.100:
 Example (aggressive scan):
 
 ```bash
-sudo python src/port_ScannerDemo1.py -n 192.168.1.1/24 -p 22 80 443 -t 0.5 -w 50
+sudo uv run portscanner -n 192.168.1.1/24 -p 22 80 443 -t 0.5 -w 50
 ```
 
 Example (export results):
 
 ```bash
-sudo python src/port_ScannerDemo1.py -n 192.168.1.1/24 -p 1-1024 --resolve-hostnames --output results.csv --format csv
+sudo uv run portscanner -n 192.168.1.1/24 -p 1-1024 --resolve-hostnames --output results.csv --format csv
 ```
 
 ## ⚠️ Disclaimer

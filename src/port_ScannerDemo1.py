@@ -216,9 +216,9 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python port_ScannerDemo1.py -n 192.168.1.1/24
-  python port_ScannerDemo1.py -n 192.168.1.1/24 -p 22 80 443 3389
-  python port_ScannerDemo1.py -n 192.168.1.1/24 -p 22 80 443 3389 --timeout 2 --workers 30
+  uv run portscanner -n 192.168.1.1/24
+  uv run portscanner -n 192.168.1.1/24 -p 22 80 443 3389
+  uv run portscanner -n 192.168.1.1/24 -p 22 80 443 3389 --timeout 2 --workers 30
         """,
     )
 
@@ -331,7 +331,7 @@ Examples:
 
     except PermissionError:
         print("❌ Error: This script requires root/administrator privileges!")
-        print("   On Linux/Mac: sudo python port_ScannerDemo1.py")
+        print("   On Linux/Mac: sudo uv run portscanner")
         print("   On Windows: Run PowerShell as Administrator")
     except Exception as e:
         print(f"❌ Error: {e}")
