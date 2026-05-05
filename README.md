@@ -11,6 +11,7 @@ A high-performance Python-based network scanning tool for discovering active dev
 - **Hostname Resolution**: Optional reverse DNS lookup for discovered devices
 - **JSON/CSV Export**: Save scan results to a file for reporting
 - **Command-line Interface**: Flexible CLI with customizable options
+- **PyQt6 GUI**: Lightweight Zenmap-style desktop interface for scans and exports
 - **Smart Threading**: Configurable thread pool for optimal performance
 - **Lightweight**: Built with Python's `socket` library and `scapy`
 - **Beautiful Output**: Well-formatted, easy-to-read results
@@ -36,6 +37,19 @@ A high-performance Python-based network scanning tool for discovering active dev
    ```
 
 ## Usage
+
+### Desktop GUI
+
+Launch the PyQt6 GUI:
+
+```bash
+sudo uv run portscanner-gui
+```
+
+The GUI includes target and port inputs, scan controls, host and port result tabs,
+live output, hostname resolution, and JSON/CSV export. ARP discovery still requires
+root/administrator privileges; if the app is launched without them, it will show a
+permission error when a scan starts.
 
 ### Network Discovery Only
 

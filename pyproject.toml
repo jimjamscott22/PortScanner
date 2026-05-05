@@ -5,19 +5,21 @@ description = "A Python network scanner for discovering devices and scanning ope
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
+    "PyQt6>=6.4",
     "scapy>=2.6.1",
 ]
 
 [project.scripts]
 netscan = "NetScan:main"
 portscanner = "port_ScannerDemo1:main"
+portscanner-gui = "gui:main"
 
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-py-modules = ["NetScan", "port_ScannerDemo1"]
+py-modules = ["NetScan", "port_ScannerDemo1", "gui"]
 
 [tool.setuptools.package-dir]
 "" = "src"
